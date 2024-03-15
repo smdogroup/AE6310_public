@@ -481,7 +481,7 @@ def create_undeformed_half_wing_structure_mesh(
         """
         offset = nspars * nnodes_per_spar
         if i % nelems_per_rib_seg == 0:
-            return spar_node(i // nelems_per_rib_seg, nelems_per_rib_seg * (rib + 1))
+            return spar_node(i // nelems_per_rib_seg, nelems_per_spar_seg * (rib + 1))
         else:
             n = rib * nnodes_per_rib + i
             return offset + n - rib * nspars - i // nelems_per_rib_seg - 1
@@ -494,7 +494,7 @@ def create_undeformed_half_wing_structure_mesh(
 
     # Nodes on the ribs
     for i in range(nribs):
-        spar_i = (i + 1) * nelems_per_rib_seg
+        spar_i = (i + 1) * nelems_per_spar_seg
         for j in range(nnodes_per_rib):
             jj = j % nelems_per_rib_seg
             kk = j // nelems_per_rib_seg
