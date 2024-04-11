@@ -17,8 +17,8 @@ def biot_savart(p1, p2, p):
     r1v = p - p1
     r2v = p - p2
 
-    r1 = np.linalg.norm(r1v)
-    r2 = np.linalg.norm(r2v)
+    r1 = np.dot(r1v, r1v) ** 0.5
+    r2 = np.dot(r2v, r2v) ** 0.5
 
     vec = (
         np.cross(r1v, r2v)
@@ -170,7 +170,7 @@ class VortexLatticeMethod:
                 coef, _, vp1, vp2 = self.eval_induced_velocity_coeff(i, j)
                 v_vec[i] += gamma[j] * coef
             I_vec[j] = vp2 - vp1
-            I_vec[j] /= np.linalg.norm(I_vec[j])
+            I_vec[j] /= np.dot(I_vec[j], I_vec[j]) ** 0.5
         v_vec += self.vinf * self.d_norm
 
         vxI = np.array([np.cross(v, i) for v, i in zip(v_vec, I_vec)])
@@ -182,7 +182,7 @@ class VortexLatticeMethod:
 
     def compute_wing_CL_CD(self, gamma):
         panel_lift, panel_drag = self.compute_panel_lift_drag(gamma)
-        area = 0.5 * np.sum(np.linalg.norm(self.panel_norms, axis=1))
+        area = 0.5 * np.sum(np.array([np.dot(v, v) ** 0.5 for v in self.panel_norms]))
         cl = panel_lift.sum() / 0.5 / self.rho_inf / self.vinf**2 / area
         cd = panel_drag.sum() / 0.5 / self.rho_inf / self.vinf**2 / area
         return cl, cd
