@@ -72,13 +72,16 @@ class VortexLatticeMethod:
         self.npanels = len(panel_nodes)
         self.span = 2.0 * (xloc[:, 1].max() - xloc[:, 1].min())
 
-        # Normal directions of panels, magnitude is twice the area
+        # Normal directions of panels and the total area of all panels
         self.panel_norms = np.array(
             [
-                np.cross(xloc[n1] - xloc[n3], xloc[n2] - xloc[n4])
+                0.5 * np.cross(xloc[n1] - xloc[n3], xloc[n2] - xloc[n4])
                 for n1, n2, n3, n4 in panel_nodes
             ]
         )
+        magnitudes = np.array([np.dot(v, v) ** 0.5 for v in self.panel_norms])
+        self.area = np.sum(magnitudes)  # area of the half-wing
+        self.panel_norms /= magnitudes[:, np.newaxis]
 
         cps = []  # control points (at 25% location of each panel)
         vps = []  # vertex line reference points (at 75% location of each panel)
@@ -170,7 +173,6 @@ class VortexLatticeMethod:
                 coef, _, vp1, vp2 = self.eval_induced_velocity_coeff(i, j)
                 v_vec[i] += gamma[j] * coef
             I_vec[j] = vp2 - vp1
-            I_vec[j] /= np.dot(I_vec[j], I_vec[j]) ** 0.5
         v_vec += self.vinf * self.d_norm
 
         vxI = np.array([np.cross(v, i) for v, i in zip(v_vec, I_vec)])
@@ -182,9 +184,8 @@ class VortexLatticeMethod:
 
     def compute_wing_CL_CD(self, gamma):
         panel_lift, panel_drag = self.compute_panel_lift_drag(gamma)
-        area = 0.5 * np.sum(np.array([np.dot(v, v) ** 0.5 for v in self.panel_norms]))
-        cl = panel_lift.sum() / 0.5 / self.rho_inf / self.vinf**2 / area
-        cd = panel_drag.sum() / 0.5 / self.rho_inf / self.vinf**2 / area
+        cl = panel_lift.sum() / 0.5 / self.rho_inf / self.vinf**2 / self.area
+        cd = panel_drag.sum() / 0.5 / self.rho_inf / self.vinf**2 / self.area
         return cl, cd
 
     def visualize(self, ax3d, gamma=None):
